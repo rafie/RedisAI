@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -xe
+# set -xe
 
 if [[ "$1" == "cpu" ]]; then
 	GPU=no
@@ -18,7 +18,7 @@ cd deps
 ### DLPACK
 
 if [[ ! -d dlpack ]]; then
-    echo "Cloning dlpack"
+    echo "Cloning dlpack..."
     git clone --depth 1 https://github.com/dmlc/dlpack.git
 fi
 
@@ -27,6 +27,8 @@ fi
 # TF_VERSION=1.12.0
 
 if [[ ! -d tensorflow ]]; then
+	echo "Installing TensorFlow..."
+	
 	if [[ $OS == linux ]]; then
 		TF_OS="linux"
 		if [[ $GPU == no ]]; then
@@ -65,6 +67,8 @@ PT_VERSION=1.0.1
 #PT_VERSION="latest"
 
 if [[ ! -d libtorch ]]; then
+	echo "Installing libtorch..."
+
 	if [[ $OS == linux ]]; then
 		PT_OS=linux
 		if [[ $GPU == no ]]; then
@@ -98,6 +102,8 @@ if [[ ! -d mkl ]]; then
 	MKL_VERSION=0.17.1
 	MKL_BUNDLE_VER=2019.0.1.20180928
 	if [[ $OS == macosx ]]; then
+		echo "Installing MKL..."
+
 		MKL_OS=mac
 		MKL_ARCHIVE=mklml_${MKL_OS}_${MKL_BUNDLE_VER}.tgz
 		[[ ! -e ${MKL_ARCHIVE} ]] && wget --quiet https://github.com/intel/mkl-dnn/releases/download/v${MKL_VERSION}/${MKL_ARCHIVE}
@@ -109,7 +115,9 @@ fi
 ### Collect libraries
 
 if [[ ! -d install ]]; then
-	python3 collect-deps.py
+	echo "Collecting binaries..."
+
+	python3 collect-bin.py
 fi
 
-echo "Done"
+# echo "Done"

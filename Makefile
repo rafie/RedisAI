@@ -12,6 +12,8 @@ else
 DEPS_FLAGS=cpu
 endif
 
+TARGET=$(BINDIR)/redisai.so
+
 #---------------------------------------------------------------------------------------------- 
 
 .PHONY: all clean deps pack setup
@@ -22,27 +24,35 @@ include $(MK)/rules
 
 #---------------------------------------------------------------------------------------------- 
 
-build: bindirs deps
-ifeq ($(wildcard $(BINDIR)/Makefile),)
-	cd $(BINDIR); \
-	cmake -DDEPS_PATH=../../deps ../../..
-endif
-	$(MAKE) -C build
+#ifeq ($(wildcard $(BINDIR)/Makefile),)
+#endif
+
+$(BINDIR)/Makefile : CMakeLists.txt
+	$(SHOW)cd $(BINDIR); \
+	rel=`python -c "import os; print os.path.relpath('$(PWD)', '$$PWD')"`; \
+	cmake -DDEPS_PATH=$$rel/deps $$rel
+
+build: $(TARGET)
+
+$(TARGET): bindirs deps $(BINDIR)/Makefile
+	$(SHOW)$(MAKE) -C $(BINDIR)
+	$(SHOW)ln -sf $(TARGET) $(notdir $(TARGET))
 
 clean:
 ifeq ($(ALL),1)
-	rm -rf $(BINROOT)
+	$(SHOW)rm -rf $(BINROOT)
 else
-	$(MAKE) -C $(BINDIR) clean
+	$(SHOW)$(MAKE) -C $(BINDIR) clean
 endif
 
 #---------------------------------------------------------------------------------------------- 
 
 setup:
-	./system-setup.py
+	@echo System setup...
+	$(SHOW)./system-setup.py
 
 deps:
-	./get_deps.sh $(DEPS_FLAGS)
+	$(SHOW)./get_deps.sh $(DEPS_FLAGS)
 
 #---------------------------------------------------------------------------------------------- 
 
@@ -50,6 +60,6 @@ pack: BINDIR
 	$(SHOW)./pack.sh $(BINDIR)/redisai.so
 
 BINDIR: bindirs
-	echo $(BINDIR)>BINDIR
+	$(SHOW)echo $(BINDIR)>BINDIR
 
 #---------------------------------------------------------------------------------------------- 

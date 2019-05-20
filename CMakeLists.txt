@@ -10,7 +10,7 @@ GET_FILENAME_COMPONENT(depsAbs
     "${DEPS_PATH}" REALPATH
     BASE_DIR "${CMAKE_BINARY_DIR}")
 
-LIST(APPEND CMAKE_PREFIX_PATH ${depsAbs}/pytorch/libtorch)
+LIST(APPEND CMAKE_PREFIX_PATH ${depsAbs}/libtorch)
 
 INCLUDE_DIRECTORIES(${depsAbs}/tensorflow/include ${depsAbs}/dlpack/include)
 
