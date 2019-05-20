@@ -1,4 +1,7 @@
 deps/*
+# !deps
+!deps/readies/
 install/*
 **/*.o
 **/*.so
+bin/

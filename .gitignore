@@ -1,3 +1,15 @@
+bin/
+VARIANT
+BINDIR
+deps/
+!depfs/readies
+deps/pytorch/
+deps/tensorflow/
+deps/dlpack/
+deps/install/
+examples/js/node_modules/
+examples/js/package-lock.json
+
 # Misc
 .DS_Store
 *.swp
@@ -5,13 +17,6 @@
 # Python
 __pycache__
 *.pyc
-
-# Dirs
-install/
-deps/
-build/
-examples/js/node_modules/
-examples/js/package-lock.json
 
 # Eclipse (if that's your jam...)
 .project

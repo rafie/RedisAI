@@ -45,23 +45,19 @@ redis-cli
 ```
 
 ## Building
-This will checkout and build and download the libraries for the backends
-(TensorFlow and PyTorch) for your platform.
+Make sure Python 2.7 is installed on your system.
+
+Then, invoke the following to install the required dependencies.
 
 ```sh
-bash get_deps.sh
-
+make setup
 ```
 
-Once the dependencies are downloaded, build the module itself. Note that
-CMake 3.0 or higher is required.
+The next step will will checkout and build and download the libraries for the backends
+(TensorFlow and PyTorch), and build the module itself.
 
 ```sh
-mkdir build
-cd build
-cmake -DDEPS_PATH=../deps/install ..
 make
-cd ..
 ```
 
 ### Running the server
@@ -74,10 +70,10 @@ redis-server --version
 Redis server v=4.0.9 sha=00000000:0 malloc=libc bits=64 build=c49f4faf7c3c647a
 ```
 
-To start redis with the RedisAI module loaded:
+To start Redis with the RedisAI module loaded:
 
 ```sh
-redis-server --loadmodule build/redisai.so
+redis-server --loadmodule bin/redisai.so
 ```
 
 ## Client libraries
@@ -90,7 +86,7 @@ Some languages have client libraries that provide support for RedisAI's commands
 | redisai-py | Python | BSD-3 | [RedisLabs](https://redislabs.com/) | [Github](https://github.com/RedisAI/redisai-py) |
 
 
-## Backend Dependancy
+## Backend Dependency
 
 RedisAI currently supports PyTorch (libtorch) and Tensorflow (libtensorflow) as backends. We are also building support for ONNXRuntime backend soon. This section shows the version map between RedisAI and supported backends. This extremely important since the serialization mechanism of one version might not match with another. For making sure your model will work with a given RedisAI version, check with the backend documentation about incompatible features between the version of your backend and the version RedisAI is built with.
 

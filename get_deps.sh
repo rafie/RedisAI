@@ -1,106 +1,115 @@
 #!/usr/bin/env bash
 
-set -e
-set -x
+set -xe
 
-BASE_DIRECTORY=`pwd`
-
-# Allow different deps for different platforms:
-
-if [ -z "$DEPS_DIRECTORY" ]; then
-  DEPS_DIRECTORY=${BASE_DIRECTORY}/deps
+if [[ "$1" == "cpu" ]]; then
+	GPU=no
+elif [[ "$1" == "gpu" ]]; then
+	GPU=yes
+else
+	GPU=${GPU:-no}
 fi
 
-mkdir -p ${DEPS_DIRECTORY}
-cd ${DEPS_DIRECTORY}
-DEPS_DIRECTORY=$PWD # -- to avoid relative/absolute confusion
+OS=$(python3 deps/readies/bin/platform --os)
+ARCH=$(python3 deps/readies/bin/platform --arch)
 
-PREFIX=${DEPS_DIRECTORY}/install
-mkdir -p ${PREFIX}
-rm -rf ${PREFIX}/share
-rm -rf ${PREFIX}/lib
-rm -rf ${PREFIX}/include
+cd deps
 
-if [ ! -d dlpack ]; then
+### DLPACK
+
+if [[ ! -d dlpack ]]; then
     echo "Cloning dlpack"
     git clone --depth 1 https://github.com/dmlc/dlpack.git
 fi
 
-mkdir -p ${PREFIX}
-if [[ "$OSTYPE" == "linux-gnu" ]]; then
-  cp -d -r --no-preserve=ownership dlpack/include ${PREFIX}
-elif [[ "$OSTYPE" == "darwin"* ]]; then
-  cp -r dlpack/include ${PREFIX}
+### TENSORFLOW
+
+# TF_VERSION=1.12.0
+
+if [[ ! -d tensorflow ]]; then
+	if [[ $OS == linux ]]; then
+		TF_OS="linux"
+		if [[ $GPU == no ]]; then
+			TF_BUILD="cpu"
+		else
+			TF_BUILD="gpu"
+		fi
+		if [[ $ARCH == x64 ]]; then
+			TF_VERSION=1.12.0
+			TF_ARCH=x86_64
+			LIBTF_URL_BASE=https://storage.googleapis.com/tensorflow/libtensorflow
+		elif [[ $ARCH == arm64v8 ]]; then
+			TF_VERSION=1.13.1
+			TF_ARCH=arm64
+			LIBTF_URL_BASE=https://s3.amazonaws.com/redismodules/tensorflow
+		fi
+	elif [[ $OS == macosx ]]; then
+		TF_VERSION=1.12.0
+		TF_OS=darwin
+		TF_BUILD=cpu
+		TF_ARCH=x86_64
+		LIBTF_URL_BASE=https://storage.googleapis.com/tensorflow/libtensorflow
+	fi
+
+	LIBTF_ARCHIVE=libtensorflow-${TF_BUILD}-${TF_OS}-${TF_ARCH}-${TF_VERSION}.tar.gz
+
+	[[ ! -f $LIBTF_ARCHIVE ]] && wget --quiet $LIBTF_URL_BASE/$LIBTF_ARCHIVE
+
+	mkdir -p tensorflow
+	tar xf $LIBTF_ARCHIVE --no-same-owner --strip-components=1 -C tensorflow
 fi
 
-## TENSORFLOW
-TF_VERSION="1.12.0"
-if [[ "$OSTYPE" == "linux-gnu" ]]; then
-  TF_OS="linux"
-  if [[ "$1" == "cpu" ]]; then
-    TF_BUILD="cpu"
-  else
-    TF_BUILD="gpu"
-  fi
-elif [[ "$OSTYPE" == "darwin"* ]]; then
-  TF_OS="darwin"
-  TF_BUILD="cpu"
-fi
+### PYTORCH
 
-LIBTF_ARCHIVE=libtensorflow-${TF_BUILD}-${TF_OS}-x86_64-${TF_VERSION}.tar.gz
-
-if [ ! -e ${LIBTF_ARCHIVE} ]; then
-  echo "Downloading libtensorflow ${TF_VERSION} ${TF_BUILD}"
-  wget https://storage.googleapis.com/tensorflow/libtensorflow/${LIBTF_ARCHIVE}
-fi
-
-tar xf ${LIBTF_ARCHIVE} --no-same-owner --strip-components=1 -C ${PREFIX}
-
-## PYTORCH
-
-PT_VERSION="1.0.1"
+PT_VERSION=1.0.1
 #PT_VERSION="latest"
 
-if [[ "$OSTYPE" == "linux-gnu" ]]; then
-  PT_OS="shared-with-deps"
-  if [[ "$1" == "cpu" ]]; then
-    PT_BUILD="cpu"
-  else
-    PT_BUILD="cu90"
-  fi
-elif [[ "$OSTYPE" == "darwin"* ]]; then
-  PT_OS="macos"
-  PT_BUILD="cpu"
+if [[ ! -d libtorch ]]; then
+	if [[ $OS == linux ]]; then
+		PT_OS=linux
+		if [[ $GPU == no ]]; then
+			PT_BUILD=cpu
+		else
+			PT_BUILD=cu90
+		fi
+		if [[ $ARCH == x64 ]]; then
+			PT_ARCH=x86_64
+		elif [[ $ARCH == arm64v8 ]]; then
+			PT_ARCH=arm64
+		fi
+	elif [[ $OS == macosx ]]; then
+		PT_OS=macos
+		PT_BUILD=cpu
+	fi
+
+	[[ "$PT_VERSION" == "latest" ]] && PT_BUILD=nightly/${PT_BUILD}
+
+	LIBTORCH_ARCHIVE=libtorch-${PT_BUILD}-${PT_OS}-${PT_ARCH}-${PT_VERSION}.tar.gz
+	[[ -z $LIBTORCH_URL ]] && LIBTORCH_URL=https://s3.amazonaws.com/redismodules/pytorch/$LIBTORCH_ARCHIVE
+
+	[[ ! -f $LIBTORCH_ARCHIVE ]] && wget --quiet $LIBTORCH_URL
+
+	tar xf $LIBTORCH_ARCHIVE --no-same-owner
 fi
 
-if [[ "$PT_VERSION" == "latest" ]]; then
-  PT_BUILD=nightly/${PT_BUILD}
+### MKL
+
+if [[ ! -d mkl ]]; then
+	MKL_VERSION=0.17.1
+	MKL_BUNDLE_VER=2019.0.1.20180928
+	if [[ $OS == macosx ]]; then
+		MKL_OS=mac
+		MKL_ARCHIVE=mklml_${MKL_OS}_${MKL_BUNDLE_VER}.tgz
+		[[ ! -e ${MKL_ARCHIVE} ]] && wget --quiet https://github.com/intel/mkl-dnn/releases/download/v${MKL_VERSION}/${MKL_ARCHIVE}
+		mkdir -p mkl
+		tar xzf ${MKL_ARCHIVE} --no-same-owner --strip-components=1 -C deps/mkl
+	fi
 fi
 
-# Where to get the archive
-LIBTORCH_URL=https://download.pytorch.org/libtorch/${PT_BUILD}/libtorch-${PT_OS}-${PT_VERSION}.zip
-# Directory where torch is extracted to
-LIBTORCH_DIRECTORY=libtorch-${PT_OS}-${PT_VERSION}
+### Collect libraries
 
-# Archive - specifically named
-LIBTORCH_ARCHIVE=libtorch-${PT_OS}-${PT_BUILD}-${PT_VERSION}.zip
-
-if [ ! -e "${LIBTORCH_ARCHIVE}" ]; then
-  echo "Downloading libtorch ${PT_VERSION} ${PT_BUILD}"
-  curl -L ${LIBTORCH_URL} > ${LIBTORCH_ARCHIVE}
-fi
-
-unzip -o ${LIBTORCH_ARCHIVE}
-tar cf - libtorch | tar xf -  --no-same-owner --strip-components=1 -C ${PREFIX}
-rm -rf libtorch
-
-if [[ "${PT_OS}" == "macos" ]]; then
-  # also download mkl
-  MKL_BUNDLE=mklml_mac_2019.0.1.20180928
-  if [ ! -e "${MKL_BUNDLE}.tgz" ]; then
-    wget "https://github.com/intel/mkl-dnn/releases/download/v0.17.1/${MKL_BUNDLE}.tgz"
-  fi
-  tar xf ${MKL_BUNDLE}.tgz --no-same-owner --strip-components=1 -C ${PREFIX}
+if [[ ! -d install ]]; then
+	python3 collect-deps.py
 fi
 
 echo "Done"

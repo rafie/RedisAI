@@ -10,20 +10,20 @@ GET_FILENAME_COMPONENT(depsAbs
     "${DEPS_PATH}" REALPATH
     BASE_DIR "${CMAKE_BINARY_DIR}")
 
-LIST(APPEND CMAKE_PREFIX_PATH ${depsAbs})
-INCLUDE_DIRECTORIES(${depsAbs}/include)
+LIST(APPEND CMAKE_PREFIX_PATH ${depsAbs}/pytorch/libtorch)
+
+INCLUDE_DIRECTORIES(${depsAbs}/tensorflow/include ${depsAbs}/dlpack/include)
 
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 SET(CMAKE_C_STANDARD 99)
 
-FIND_LIBRARY(TF_LIBRARIES NAMES tensorflow libtensorflow.so)
+FIND_LIBRARY(TF_LIBRARIES NAMES tensorflow libtensorflow.so 
+    PATHS ${depsAbs}/tensorflow/lib)
 
 IF (NOT TF_LIBRARIES)
     MESSAGE(FATAL_ERROR "Could not find tensorflow")
 ENDIF()
-
-INCLUDE_DIRECTORIES(${depsAbs}/libtensorflow/include)
 
 IF (APPLE)
     FIND_LIBRARY(MKL_LIBRARIES NAMES mklml)
