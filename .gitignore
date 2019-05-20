@@ -1,12 +1,8 @@
-bin/
+bin/*
 VARIANT
 BINDIR
 deps/*
-deps/pytorch/*
-deps/tensorflow/*
-deps/dlpack/*
-deps/install/*
-!deps/readies/*
+!deps/readies/
 !deps/*.py
 examples/js/node_modules/
 examples/js/package-lock.json
