@@ -36,7 +36,7 @@ build: $(TARGET)
 
 $(TARGET): bindirs deps $(BINDIR)/Makefile
 	$(SHOW)$(MAKE) -C $(BINDIR)
-	$(SHOW)ln -sf $(TARGET) bin/$(notdir $(TARGET))
+	$(SHOW)cd bin; ln -sf ../$(TARGET) $(notdir $(TARGET))
 
 clean:
 ifeq ($(ALL),1)
