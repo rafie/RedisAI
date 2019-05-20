@@ -18,7 +18,7 @@ ENV LD_LIBRARY_PATH /usr/lib/redis/modules/
 RUN set -ex;\
     mkdir -p "$LD_LIBRARY_PATH";
 
-COPY --from=builder /redisai/build/redisai.so "$LD_LIBRARY_PATH"
+COPY --from=builder /redisai/bin/redisai.so "$LD_LIBRARY_PATH"
 COPY --from=builder /redisai/deps/install/*.so* "$LD_LIBRARY_PATH"
 
 WORKDIR /data

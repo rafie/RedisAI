@@ -36,7 +36,7 @@ build: $(TARGET)
 
 $(TARGET): bindirs deps $(BINDIR)/Makefile
 	$(SHOW)$(MAKE) -C $(BINDIR)
-	$(SHOW)ln -sf $(TARGET) $(notdir $(TARGET))
+	$(SHOW)ln -sf $(TARGET) bin/$(notdir $(TARGET))
 
 clean:
 ifeq ($(ALL),1)
@@ -57,7 +57,7 @@ deps:
 #---------------------------------------------------------------------------------------------- 
 
 pack: BINDIR
-	$(SHOW)./pack.sh $(BINDIR)/redisai.so
+	$(SHOW)./pack.sh $(TARGET)
 
 BINDIR: bindirs
 	$(SHOW)echo $(BINDIR)>BINDIR
