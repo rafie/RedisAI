@@ -1,12 +1,13 @@
 bin/
 VARIANT
 BINDIR
-deps/
-!depfs/readies
-deps/pytorch/
-deps/tensorflow/
-deps/dlpack/
-deps/install/
+deps/*
+deps/pytorch/*
+deps/tensorflow/*
+deps/dlpack/*
+deps/install/*
+!deps/readies/*
+!deps/*.py
 examples/js/node_modules/
 examples/js/package-lock.json
 

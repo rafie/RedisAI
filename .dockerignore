@@ -1,7 +1,7 @@
 deps/*
-# !deps
-!deps/readies/
+!deps/readies/*
+!deps/*.py
 install/*
 **/*.o
 **/*.so
-bin/
+bin/*
